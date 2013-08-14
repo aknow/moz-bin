@@ -1,0 +1,14 @@
+#!/bin/bash
+files=`ls *.patch`
+for i in $files
+  do
+    patch_type=`head -1 $i | awk '{print $2}'`
+    if [ $patch_type == "HG" ]; then
+      patch_flag="\e[01;32mHG\e[00m"
+    else
+      patch_flag="\e[01;31m(x) git\e[00m"
+    fi
+
+    title=`head -3 $i | tail -1`
+    echo -e "$patch_flag $title"
+  done

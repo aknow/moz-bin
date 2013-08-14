@@ -1,0 +1,7 @@
+#!/bin/bash
+
+B2G="$(dirname "$PWD")"
+
+make package-tests
+cd dist/test-package-stage/xpcshell
+python runtestsb2g.py --b2gpath $B2G --emulator arm --use-device-libs --manifest tests/dom/system/gonk/tests/xpcshell.ini --testing-modules-dir tests/dom/system/gonk/tests/ --busybox ~/bin/busybox-armv6l

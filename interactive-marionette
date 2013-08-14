@@ -1,0 +1,15 @@
+#!/bin/bash
+
+adb forward tcp:2828 tcp:2828
+
+SCRIPT="
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+pprint = pp.pprint
+
+from marionette import Marionette
+marionette = Marionette('localhost', 2828)
+marionette.start_session()
+runjs = lambda x: marionette.execute_script(x, new_sandbox=False)"
+
+python -ic "$SCRIPT"

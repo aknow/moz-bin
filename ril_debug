@@ -1,0 +1,20 @@
+#!/bin/sh
+
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 [true|false]" >&2
+  exit 1
+fi
+
+# the following code is wrong. no effect. need fix.
+if [ "$1" != "true" ] && [ "$1" != "false" ]; then
+  echo "should be true or false" >&2
+  exit 1
+fi
+
+adb remount
+adb pull /system/b2g/defaults/pref/user.js
+sed -i "s/\"ril.debugging.enabled\", .*)/\"ril.debugging.enabled\", $1)/g" user.js
+adb remount
+adb push user.js /system/b2g/defaults/pref/user.js
+adb shell stop b2g
+adb shell start b2g

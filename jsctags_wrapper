@@ -1,0 +1,7 @@
+#!/bin/bash
+
+find . -type f -name "*.js" -exec sed -i.bak "s/for\(.*\) of/for\1 in/g" '{}' \;
+jsctags . $*
+find . -type f -name "*.js" | xargs rm
+find . -type f -name "*.js.bak" | xargs rename 's/\.bak$//'
+
