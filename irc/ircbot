@@ -11,16 +11,20 @@ from twisted.internet import reactor, protocol, ssl
 from twisted.python import log
 
 # system imports
-import time, sys
+import time
+import sys
 
 # module
 import irc_url
 
+
 class MessageLogger:
+
     """
     An independent logger class (because separation of application
     and protocol logic is a good thing).
     """
+
     def __init__(self, file):
         self.file = file
 
@@ -35,6 +39,7 @@ class MessageLogger:
 
 
 class LogBot(irc.IRCClient):
+
     """A logging IRC bot."""
 
     nickname = "_aknow_bot"
@@ -51,13 +56,12 @@ class LogBot(irc.IRCClient):
                         time.asctime(time.localtime(time.time())))
         self.logger.close()
 
-
-    def autoResponseForURL(self, msg, user, target, prefix=''):
-      passs, display = irc_url.get_results(msg)
-      if passs:
-          for d in display:
-              msg = "url => [ %s ]" % (d[0])
-              self.msg(target, msg)
+    def autoResponseForURL(self, channel, msg):
+        passs, display = irc_url.get_results(msg)
+        if passs:
+            for d in display:
+                msg = "url => [ %s ]" % (d[0])
+                self.msg(channel, msg)
 
     # callbacks for events
 
@@ -76,16 +80,17 @@ class LogBot(irc.IRCClient):
 
         # Check to see if they're sending me a private message
         if channel == self.nickname:
-            self.autoResponseForURL(msg, user, user)
-            return
-
-        # Otherwise check to see if it is a message directed at me
-        if msg.startswith(self.nickname + ":"):
-            self.autoResponseForURL(msg, user, channel, user + ':')
+            self.autoResponseForURL(user, msg)
             return
 
         # Check url in channel msg
-        self.autoResponseForURL(msg, user, channel)
+        self.autoResponseForURL(channel, msg)
+
+        # If it is a message directed at me
+        if msg.startswith(self.nickname + ":"):
+            # Redirect the msg.
+            self.msg('aknow', msg)
+            return
 
     def action(self, user, channel, msg):
         """This will get called when the bot sees someone do an action."""
@@ -100,7 +105,6 @@ class LogBot(irc.IRCClient):
         new_nick = params[0]
         self.logger.log("%s is now known as %s" % (old_nick, new_nick))
 
-
     # For fun, override the method that determines how a nickname is changed on
     # collisions. The default method appends an underscore.
     def alterCollidedNick(self, nickname):
@@ -111,8 +115,8 @@ class LogBot(irc.IRCClient):
         return nickname + '^'
 
 
-
 class LogBotFactory(protocol.ClientFactory):
+
     """A factory for LogBots.
 
     A new protocol instance will be created each time we connect to the server.
@@ -151,6 +155,5 @@ def main():
     reactor.run()
 
 if __name__ == '__main__':
-  while True:
-    main()
-
+    while True:
+        main()

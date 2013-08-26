@@ -1,4 +1,5 @@
 #!/bin/bash
+
 files=`ls *.patch`
 for i in $files
   do

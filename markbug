@@ -10,4 +10,4 @@ else
   filelist=$(cat)
 fi
 
-sed -i "s/Bug 111111 -/Bug ${id} -/g" $filelist
+sed -i "3s/^/Bug ${id} - /g" $filelist
