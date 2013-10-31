@@ -43,10 +43,10 @@ def find_title_lite(url):
         parser = html.HTMLParser(encoding=doc.original_encoding)
         root = html.document_fromstring(content, parser=parser)
         title = root.find('.//title').text_content()
-        if title:
+        if title and title != 'Access Denied':
             return True, tidy_title(title)
-        else:
-            return False, 'No Title'
+
+        return False, 'No Title'
     except:
         return False, 'No Title'
 

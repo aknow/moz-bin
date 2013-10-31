@@ -1,0 +1,5 @@
+#!/bin/bash
+
+hg qpop -a
+hg qseries | cut -b 1 | tac | xargs hg qremove
+hg pull -u

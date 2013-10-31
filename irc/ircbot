@@ -4,7 +4,6 @@ HOST = 'irc.mozilla.org'
 PORT = 6697
 CHANNEL = '#mozilla-taiwan'
 
-
 # twisted imports
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol, ssl
@@ -18,26 +17,6 @@ import sys
 import irc_url
 
 
-class MessageLogger:
-
-    """
-    An independent logger class (because separation of application
-    and protocol logic is a good thing).
-    """
-
-    def __init__(self, file):
-        self.file = file
-
-    def log(self, message):
-        """Write a message to the file."""
-        timestamp = time.strftime("[%H:%M:%S]", time.localtime(time.time()))
-        self.file.write('%s %s\n' % (timestamp, message))
-        self.file.flush()
-
-    def close(self):
-        self.file.close()
-
-
 class LogBot(irc.IRCClient):
 
     """A logging IRC bot."""
@@ -46,15 +25,9 @@ class LogBot(irc.IRCClient):
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
-        self.logger = MessageLogger(open(self.factory.filename, "a"))
-        self.logger.log("[connected at %s]" %
-                        time.asctime(time.localtime(time.time())))
 
     def connectionLost(self, reason):
         irc.IRCClient.connectionLost(self, reason)
-        self.logger.log("[disconnected at %s]" %
-                        time.asctime(time.localtime(time.time())))
-        self.logger.close()
 
     def autoResponseForURL(self, channel, msg):
         passs, display = irc_url.get_results(msg)
@@ -62,6 +35,7 @@ class LogBot(irc.IRCClient):
             for d in display:
                 msg = "url => [ %s ]" % (d[0])
                 self.msg(channel, msg)
+                log.msg(msg)
 
     # callbacks for events
 
@@ -71,12 +45,11 @@ class LogBot(irc.IRCClient):
 
     def joined(self, channel):
         """This will get called when the bot joins the channel."""
-        self.logger.log("[I have joined %s]" % channel)
+        return
 
     def privmsg(self, user, channel, msg):
         """This will get called when the bot receives a message."""
         user = user.split('!', 1)[0]
-        self.logger.log("<%s> %s" % (user, msg))
 
         # Check to see if they're sending me a private message
         if channel == self.nickname:
@@ -95,7 +68,6 @@ class LogBot(irc.IRCClient):
     def action(self, user, channel, msg):
         """This will get called when the bot sees someone do an action."""
         user = user.split('!', 1)[0]
-        self.logger.log("* %s %s" % (user, msg))
 
     # irc callbacks
 
@@ -103,7 +75,6 @@ class LogBot(irc.IRCClient):
         """Called when an IRC user changes their nickname."""
         old_nick = prefix.split('!')[0]
         new_nick = params[0]
-        self.logger.log("%s is now known as %s" % (old_nick, new_nick))
 
     # For fun, override the method that determines how a nickname is changed on
     # collisions. The default method appends an underscore.
@@ -122,9 +93,8 @@ class LogBotFactory(protocol.ClientFactory):
     A new protocol instance will be created each time we connect to the server.
     """
 
-    def __init__(self, channel, filename):
+    def __init__(self, channel):
         self.channel = channel
-        self.filename = filename
 
     def buildProtocol(self, addr):
         p = LogBot()
@@ -145,7 +115,7 @@ def main():
     log.startLogging(sys.stdout)
 
     # create factory protocol and application
-    f = LogBotFactory(CHANNEL, sys.argv[1])
+    f = LogBotFactory(CHANNEL)
 
     # connect factory to this host and port
     #reactor.connectTCP("irc.freenode.net", 6667, f)
