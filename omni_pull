@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Usage: omni_pull.sh <target_filename>
+if [ $# -ne "1" ] ; then
+  echo "Usage: $0 <target_filename>"
+  exit 1
+fi
+
+# Make sure the device is connected.
+remount_msg=`adb remount 2>&1`
+if [ "$remount_msg" != "remount succeeded" ] ; then
+  echo $remount_msg
+  exit 1
+fi
+
+target="*$1*"
+
+# Work in a tmp folder.
+tmp_folder=`uuidgen | cut -d'-' -f 1`
+mkdir $tmp_folder
+cd $tmp_folder
+
+# Extract the target file.
+adb pull /system/b2g/omni.ja &> /dev/null
+unzip omni.ja $target &> /dev/null
+target_path=`find -name $target`
+cp $target_path ../
+
+# Clear the stuff.
+cd ..
+rm -rf $tmp_folder
