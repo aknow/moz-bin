@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage: omni_push.sh <target_filename>
-if [ $# -ne "1" ] ; then
+if [ $# -eq "0" ] ; then
   echo "Usage: $0 <target_filename>"
   exit 1
 fi
@@ -14,12 +14,15 @@ if [ "$remount_msg" != "remount succeeded" ] ; then
 fi
 
 # Make sure the target file exists.
-if [ -f $1 ] ; then
-  target="*$1*"
-else
-  echo "Error: File not exists"
-  exit 1
-fi
+for file in "$@"
+do
+  if [ -f $file ] ; then
+    target="*$file*"
+  else
+    echo "Error: $file not exists"
+    exit 1
+  fi
+done
 
 # Work in a tmp folder.
 tmp_folder=`uuidgen | cut -d'-' -f 1`
@@ -30,13 +33,16 @@ cd $tmp_folder
 adb pull /system/b2g/omni.ja &> /dev/null
 unzip omni.ja &> /dev/null
 
-# Overwrite it.
-target_path=`find -name $target`
-cd ..
-cp $1 $tmp_folder/$target_path
-cd $tmp_folder
-rm omni.ja
-zip -r omni.ja * &> /dev/null
+for file in "$@"
+do
+  # Overwrite the target file.
+  target_path=`find -name $target`
+  cd ..
+  cp $file $tmp_folder/$target_path
+  cd $tmp_folder
+  rm omni.ja
+  zip -r omni.ja * &> /dev/null
+done
 
 # Push and reboot.
 adb push omni.ja /system/b2g &> /dev/null

@@ -1,7 +1,11 @@
 #!/bin/bash
 
-hg qpop -a
-hg qseries | cut -b 1 | tac | xargs hg qremove
+commit=`hg qseries`
+if [ "$commit" != "" ]; then
+  hg qpop -a
+  hg qseries | cut -b 1 | tac | xargs hg qremove
+fi
+
 hg pull -u
 
 hg qimport ../gecko-dev/patch/*
